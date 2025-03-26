@@ -7,8 +7,6 @@ from app.crawlers.news import NewsCrawler
 import logging
 from typing import List
 from app.crawlers.stock_crawler import StockCrawler
-from app.crawlers.financial_crawler import FinancialCrawler
-from app.crawlers.news_crawler import NewsCrawler
 from app.core.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
@@ -48,7 +46,7 @@ def crawl_financial_reports(self, symbols: List[str], report_type: str = "10-K")
     """爬取财务报告的Celery任务"""
     try:
         logger.info(f"开始爬取财务报告: {symbols}")
-        crawler = FinancialCrawler()
+        crawler = FinancialReportCrawler()
         success = crawler.crawl_financial_reports(symbols, report_type)
         if not success:
             raise Exception(f"Failed to crawl financial reports for symbols: {symbols}")
@@ -70,7 +68,8 @@ def crawl_news(self, symbols: List[str], days: int = 7):
     """爬取新闻的Celery任务"""
     try:
         logger.info(f"开始爬取新闻: {symbols}")
-        crawler = NewsCrawler()
+        db = SessionLocal()
+        crawler = NewsCrawler(db)
         success = crawler.crawl_news(symbols, days)
         if not success:
             raise Exception(f"Failed to crawl news for symbols: {symbols}")
@@ -78,6 +77,8 @@ def crawl_news(self, symbols: List[str], days: int = 7):
     except Exception as e:
         logger.error(f"爬取新闻时发生错误: {str(e)}")
         raise self.retry(exc=e)
+    finally:
+        db.close()
 
 @shared_task
 def schedule_crawling_tasks():

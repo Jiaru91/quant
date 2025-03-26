@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 import logging
 from app.core.database import SessionLocal
-from app.models.stock_data import StockData
+from app.models.crawler import StockData
 import time
 import json
 import requests
@@ -99,8 +99,7 @@ class StockCrawler:
                                     high_price=float(row['High']),
                                     low_price=float(row['Low']),
                                     close_price=float(row['Close']),
-                                    volume=int(row['Volume']),
-                                    period=period
+                                    volume=int(row['Volume'])
                                 )
                                 db.add(stock_data)
                             except (ValueError, TypeError) as e:
